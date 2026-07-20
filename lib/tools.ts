@@ -63,7 +63,8 @@ export const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 /** Executes a Hermes-requested tool call and returns a string result. */
 export async function runTool(
   name: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  defaultEffort: ReasoningEffort = "medium"
 ): Promise<string> {
   switch (name) {
     case "get_current_time":
@@ -71,7 +72,7 @@ export async function runTool(
 
     case "inkling_reason": {
       const prompt = String(args.prompt ?? "");
-      const effort = (args.effort as ReasoningEffort) ?? "medium";
+      const effort = (args.effort as ReasoningEffort) ?? defaultEffort;
       const imageUrl = args.image_url ? String(args.image_url) : undefined;
 
       const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import type OpenAI from "openai";
 import { hermes, HERMES_MODEL } from "@/lib/models";
 import { HERMES_SYSTEM_PROMPT, tools, runTool } from "@/lib/tools";
+import type { ReasoningEffort } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -22,7 +23,10 @@ const MAX_TOOL_HOPS = 5;
  * answer is streamed token-by-token.
  */
 export async function POST(req: NextRequest) {
-  const { messages } = (await req.json()) as { messages: ChatMessage[] };
+  const { messages, effort = "medium" } = (await req.json()) as {
+    messages: ChatMessage[];
+    effort?: ReasoningEffort;
+  };
 
   const convo: ChatMessage[] = [
     { role: "system", content: HERMES_SYSTEM_PROMPT },
@@ -73,7 +77,7 @@ export async function POST(req: NextRequest) {
               /* leave args empty on malformed JSON */
             }
             send("tool", { name, args });
-            const result = await runTool(name, args);
+            const result = await runTool(name, args, effort);
             convo.push({
               role: "tool",
               tool_call_id: call.id,
