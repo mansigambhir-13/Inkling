@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inklingAudio, INKLING_MODEL } from "@/lib/models";
+import { mockTranscript } from "@/lib/mock";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
+
+const MOCK = process.env.NEURAL_MOCK === "1";
 
 /**
  * Voice → Inkling → text.
@@ -16,6 +19,12 @@ export const maxDuration = 300;
  */
 export async function POST(req: NextRequest) {
   try {
+    if (MOCK) {
+      // Simulate Inkling's audio latency, then return a demo transcript.
+      await new Promise((r) => setTimeout(r, 700));
+      return NextResponse.json(mockTranscript());
+    }
+
     const form = await req.formData();
     const file = form.get("audio");
     if (!(file instanceof Blob)) {

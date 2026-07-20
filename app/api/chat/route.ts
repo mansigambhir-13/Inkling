@@ -3,6 +3,9 @@ import type OpenAI from "openai";
 import { hermes, HERMES_MODEL } from "@/lib/models";
 import { HERMES_SYSTEM_PROMPT, tools, runTool } from "@/lib/tools";
 import type { ReasoningEffort } from "@/lib/models";
+import { mockChat } from "@/lib/mock";
+
+const MOCK = process.env.NEURAL_MOCK === "1";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -42,6 +45,16 @@ export async function POST(req: NextRequest) {
         );
 
       try {
+        if (MOCK) {
+          await mockChat(
+            messages as { role: string; content: string }[],
+            effort,
+            send
+          );
+          controller.close();
+          return;
+        }
+
         for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
           const res = await hermes.chat.completions.create({
             model: HERMES_MODEL,
